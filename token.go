@@ -4,10 +4,14 @@ type TokenBuilder interface {
 	Build(TokenOptions) Token
 }
 
+type SignedToken struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
 type Token interface {
-	Generate()
+	Generate() (*SignedToken, error)
 	Refresh()
-	Revoke()
+	UpdateSecret()
 	Prase()
 	Verify()
 }

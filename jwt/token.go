@@ -1,38 +1,47 @@
 package jwt
 
 import (
-	"time"
+	"gotoken"
 
 	jwtraw "github.com/golang-jwt/jwt/v5"
 )
 
-type JwtToken struct {
-	token *jwtraw.Token
-	opts  JwtOptions
+type JwtTokenSrv struct {
+	accessOpts  jwtOptions
+	refreshOpts jwtOptions
 }
 
-func (j *JwtToken) Generate() (string, error) {
-	claims := &jwtraw.RegisteredClaims{
-		ExpiresAt: jwtraw.NewNumericDate(time.Now().Add(j.opts.ExpiredByHour * time.Hour)),
-		IssuedAt:  jwtraw.NewNumericDate(time.Now()),
-		NotBefore: jwtraw.NewNumericDate(time.Now()),
-		Issuer:    token.IssuerCA,
-		Subject:   "admin",
-		ID:        "1",
+// jwtraw.SigningMethodHS256
+func (j *JwtTokenSrv) Generate() (*gotoken.SignedToken, error) {
+
+	token := &gotoken.SignedToken{}
+	var err error
+
+	token.AccessToken, err = func() (string, error) {
+		accessToken := jwtraw.NewWithClaims(j.accessOpts.signingMethod, j.accessOpts.claims)
+		return accessToken.SignedString(j.accessOpts.secret)
+	}()
+	if err != nil {
+		return nil, err
 	}
-
-	j.token = jwtraw.NewWithClaims(jwtraw.SigningMethodHS256, claims)
-	return j.token.SignedString(j.opts.Secret)
+	token.RefreshToken, err = func() (string, error) {
+		refreshToken := jwtraw.NewWithClaims(j.refreshOpts.signingMethod, j.refreshOpts.claims)
+		return refreshToken.SignedString(j.refreshOpts.secret)
+	}()
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
 }
-func (j *JwtToken) Refresh() {
+func (j *JwtTokenSrv) Refresh() {
 
 }
-func (j *JwtToken) Revoke() {
+func (j *JwtTokenSrv) UpdateSecret() {
 
 }
-func (j *JwtToken) Prase() {
+func (j *JwtTokenSrv) Prase() {
 
 }
-func (j *JwtToken) Verify() {
+func (j *JwtTokenSrv) Verify() {
 
 }
